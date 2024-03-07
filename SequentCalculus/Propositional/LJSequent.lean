@@ -1,21 +1,21 @@
 import SequentCalculus.Propositional.Syntax
 
-namespace Propositional
+namespace Propositional.LJ
 
 variable {α : Type u} [DecidableEq α]
 
 @[aesop unsafe]
 inductive LJSequent : Context α → Formula α → Nat → Prop where
-| ax : LJSequent (Γ, p) p 0
-| falseL : LJSequent (Γ, ⊥) p 0
-| andL₁ : LJSequent (Γ, p) r k → LJSequent (Γ, p ⋀ q) r (k + 1)
-| andL₂ : LJSequent (Γ, q) r k → LJSequent (Γ, p ⋀ q) r (k + 1)
+| ax : LJSequent (Γ,, p) p 0
+| falseL : LJSequent (Γ,, ⊥) p 0
+| andL₁ : LJSequent (Γ,, p) r k → LJSequent (Γ,, p ⋀ q) r (k + 1)
+| andL₂ : LJSequent (Γ,, q) r k → LJSequent (Γ,, p ⋀ q) r (k + 1)
 | andR : LJSequent Γ p k → LJSequent Γ q k → LJSequent Γ (p ⋀ q) (k + 1)
-| orL : LJSequent (Γ, p) r k → LJSequent (Γ, q) r k → LJSequent (Γ, p ⋁ q) r (k + 1)
+| orL : LJSequent (Γ,, p) r k → LJSequent (Γ,, q) r k → LJSequent (Γ,, p ⋁ q) r (k + 1)
 | orR₁ : LJSequent Γ p k → LJSequent Γ (p ⋁ q) (k + 1)
 | orR₂ : LJSequent Γ q k → LJSequent Γ (p ⋁ q) (k + 1)
-| impL : LJSequent Γ p k → LJSequent (Γ, q) r k → LJSequent (Γ, p ⇒ q) r (k + 1)
-| impR : LJSequent (Γ, p) q k → LJSequent Γ (p ⇒ q) (k + 1)
+| impL : LJSequent Γ p k → LJSequent (Γ,, q) r k → LJSequent (Γ,, p ⇒ q) r (k + 1)
+| impR : LJSequent (Γ,, p) q k → LJSequent Γ (p ⇒ q) (k + 1)
 | succ : LJSequent Γ p k → LJSequent Γ p (k + 1)
 
 scoped notation:55 Γ " ⊢[" k "] " p:55 => LJSequent Γ p k
@@ -36,10 +36,10 @@ theorem ax' : p ∈ Γ → Γ ⊢[0] p := by
   rw [←add_eq_of_mem h]
   exact ax
 
-theorem negL : Γ ⊢[k] p → Γ, ~ p ⊢[k + 1] ⊥ :=
+theorem negL : Γ ⊢[k] p → Γ,, ~ p ⊢[k + 1] ⊥ :=
   (impL · (le falseL (zero_le _)))
 
-theorem negR : Γ, p ⊢[k] ⊥ → Γ ⊢[k + 1] ~ p := impR
+theorem negR : Γ,, p ⊢[k] ⊥ → Γ ⊢[k + 1] ~ p := impR
 
 theorem trueR : Γ ⊢[1] (⊤ : Formula α) := negR falseL
 
@@ -67,7 +67,7 @@ theorem weakenL : Γ ⊢[k] p → Γ ⊆ Δ → Δ ⊢[k] p := by
   | orR₂ =>
     apply orR₂; apply ih <;> aesop (add safe add_subset_add)
 
-theorem weakenL' : Γ ⊢[k] p → Γ, q ⊢[k] p :=
+theorem weakenL' : Γ ⊢[k] p → Γ,, q ⊢[k] p :=
   (weakenL · subset_add)
 
 theorem consistency : (∅ ⊢[k] (⊥ : Formula α)) → False := by
@@ -96,7 +96,7 @@ theorem no_excluded_middle {a : α} : ∅ ⊢[k] atom a ⋁ ~ atom a → False :
     <;> cases h <;> (try cases add_ne_empty (Eq.symm h₁))
     <;> subst h₁ <;> rename _ => h
     <;> (try apply ih at h <;> aesop)
-  generalize h₁ : (∅, atom a) = Γ at h
+  generalize h₁ : (∅,, atom a) = Γ at h
   clear ih; rename Nat => k
   induction' k using Nat.strongRecOn with k ih
   cases h
@@ -109,23 +109,23 @@ set_option maxHeartbeats 400000
 attribute [simp] Nat.add_zero Nat.add_succ Nat.succ_add Nat.lt_succ
 
 theorem cut {Γ : Context α} :
-  Γ ⊢[k₁] p → Γ, p ⊢[k₂] q → ∃ k, Γ ⊢[k] q := by
+  Γ ⊢[k₁] p → Γ,, p ⊢[k₂] q → ∃ k, Γ ⊢[k] q := by
   intro h₁ h₂
   
   induction' h : p.size using Nat.strongRecOn with _ ih₁ generalizing Γ p q k₁ k₂; subst h
   replace ih₁ : ∀ {Γ : Context α} {p' q k₁ k₂},
-    Γ ⊢[k₁] p' → Γ, p' ⊢[k₂] q → p'.size < p.size → ∃ k, Γ ⊢[k] q := by
+    Γ ⊢[k₁] p' → Γ,, p' ⊢[k₂] q → p'.size < p.size → ∃ k, Γ ⊢[k] q := by
     intros _ _ _ _ _ h₁ h₂ h₃
     exact ih₁ _ h₃ h₁ h₂ rfl
   induction' h : (k₁ + k₂) using Nat.strongRecOn with _ ih₂
     generalizing Γ p q k₁ k₂; subst h
   replace ih₂ : ∀ {Γ q k₁' k₂'},
-    Γ ⊢[k₁'] p → Γ, p ⊢[k₂'] q → k₁' + k₂' < k₁ + k₂ → ∃ k, Γ ⊢[k] q := by
+    Γ ⊢[k₁'] p → Γ,, p ⊢[k₂'] q → k₁' + k₂' < k₁ + k₂ → ∃ k, Γ ⊢[k] q := by
     intros _ _ _ _ h₁ h₂ h₃
     apply ih₂ _ h₃ h₁ h₂ _ rfl
     apply ih₁
   
-  generalize h : (Γ, p) = Δ at h₂
+  generalize h : (Γ,, p) = Δ at h₂
   have h₁' := h₁
   cases h₁' with simp at *
   | succ h₁' => subst h; rcases ih₂ h₁' h₂ (by simp) with ⟨k, h₃⟩; exists k
@@ -215,17 +215,13 @@ theorem cut {Γ : Context α} :
           subst_vars
           apply weakenL' (q := q₁) at h₁
           apply weakenL' (q := q₁ ⋀ q₂) at h₂'
-          rw [add_exchange] at h₂'
-          rw [←h] at h₂'
-          rw [add_exchange] at h₂'
+          rw [add_exchange, ←h, add_exchange] at h₂'
           rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
           rcases ih₁ h₁' h₃ (by simp) with ⟨k', h₃'⟩
           exists k'
       · apply weakenL' (q := q₁) at h₁
         apply weakenL' (q := q₁ ⋀ q₂) at h₂'
-        rw [add_exchange] at h₂'
-        rw [←h] at h₂'
-        rw [add_exchange] at h₂'
+        rw [add_exchange, ←h, add_exchange] at h₂'
         rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
         exists k + 1
         rw [←add_eq_of_mem h'']
@@ -237,17 +233,13 @@ theorem cut {Γ : Context α} :
           subst_vars
           apply weakenL' (q := q₂) at h₁
           apply weakenL' (q := q₁ ⋀ q₂) at h₂'
-          rw [add_exchange] at h₂'
-          rw [←h] at h₂'
-          rw [add_exchange] at h₂'
+          rw [add_exchange, ←h, add_exchange] at h₂'
           rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
           rcases ih₁ h₁'' h₃ (by simp) with ⟨k', h₃'⟩
           exists k'
       · apply weakenL' (q := q₂) at h₁
         apply weakenL' (q := q₁ ⋀ q₂) at h₂'
-        rw [add_exchange] at h₂'
-        rw [←h] at h₂'
-        rw [add_exchange] at h₂'
+        rw [add_exchange, ←h, add_exchange] at h₂'
         rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
         exists k + 1
         rw [←add_eq_of_mem h'']
@@ -258,30 +250,22 @@ theorem cut {Γ : Context α} :
         try case orR₁.orL.inl =>
           subst_vars
           apply weakenL' (q := q₁ ⋁ q₂) at h₂'
-          rw [add_exchange] at h₂'
-          rw [←h] at h₂'
-          rw [add_exchange] at h₂'
+          rw [add_exchange, ←h, add_exchange] at h₂'
           rcases ih₂ (weakenL' h₁) h₂' (by simp) with ⟨k, h₃⟩
           rcases ih₁ h₁' h₃ (by simp) with ⟨k', h₃'⟩
           exists k'
         all_goals
           subst_vars
           apply weakenL' (q := q₁ ⋁ q₂) at h₂''
-          rw [add_exchange] at h₂''
-          rw [←h] at h₂''
-          rw [add_exchange] at h₂''
+          rw [add_exchange, ←h, add_exchange] at h₂''
           rcases ih₂ (weakenL' h₁) h₂'' (by simp) with ⟨k, h₃⟩
           rcases ih₁ h₁' h₃ (by simp) with ⟨k', h₃'⟩
           exists k'
       · apply weakenL' (q := q₁ ⋁ q₂) at h₂'
-        rw [add_exchange] at h₂'
-        rw [←h] at h₂'
-        rw [add_exchange] at h₂'
+        rw [add_exchange, ←h, add_exchange] at h₂'
         rcases ih₂ (weakenL' h₁) h₂' (by simp) with ⟨k, h₃⟩
         apply weakenL' (q := q₁ ⋁ q₂) at h₂''
-        rw [add_exchange] at h₂''
-        rw [←h] at h₂''
-        rw [add_exchange] at h₂''
+        rw [add_exchange, ←h, add_exchange] at h₂''
         rcases ih₂ (weakenL' h₁) h₂'' (by simp) with ⟨k', h₃'⟩
         exists max k k' + 1
         rw [←add_eq_of_mem h'']
@@ -298,9 +282,7 @@ theorem cut {Γ : Context α} :
           rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
           rcases ih₁ h₃ h₁' (by simp) with ⟨k, h₃⟩
           apply weakenL' (q := q₁ ⇒ q₂) at h₂''
-          rw [add_exchange] at h₂''
-          rw [←h] at h₂''
-          rw [add_exchange] at h₂''
+          rw [add_exchange, ←h, add_exchange] at h₂''
           rcases ih₂ (weakenL' h₁) h₂'' (by simp) with ⟨k', h₃'⟩
           rcases ih₁ h₃ h₃' (by simp) with ⟨k'', h₃''⟩
           exists k''
@@ -308,9 +290,7 @@ theorem cut {Γ : Context α} :
         rw [←h] at h₂'
         rcases ih₂ h₁ h₂' (by simp) with ⟨k, h₃⟩
         apply weakenL' (q := q₁ ⇒ q₂) at h₂''
-        rw [add_exchange] at h₂''
-        rw [←h] at h₂''
-        rw [add_exchange] at h₂''
+        rw [add_exchange, ←h, add_exchange] at h₂''
         rcases ih₂ (weakenL' h₁) h₂'' (by simp) with ⟨k', h₃'⟩
         exists max k k' + 1
         rw [←add_eq_of_mem h'']
@@ -318,8 +298,6 @@ theorem cut {Γ : Context α} :
         · apply le h₃; simp
         · apply le h₃'; simp
 
-
-
 end LJSequent
 
-end Propositional
+end Propositional.LJ
