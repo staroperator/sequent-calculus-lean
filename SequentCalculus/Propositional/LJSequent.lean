@@ -1,4 +1,3 @@
--- import Mathlib.Tactic.Linarith
 import SequentCalculus.Propositional.Syntax
 
 namespace Propositional
