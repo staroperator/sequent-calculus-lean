@@ -11,7 +11,7 @@ inductive Formula (α : Type u) where
 | imp : Formula α → Formula α → Formula α
 
 instance : Bot (Formula α) := ⟨Formula.false⟩
-infixr:70 " ⇒ " => Formula.imp
+infixr:70 (priority := high) " ⇒ " => Formula.imp
 abbrev Formula.neg (p : Formula α) := p ⇒ ⊥
 prefix:73 "~ " => Formula.neg
 instance : Top (Formula α) := ⟨~ ⊥⟩
@@ -41,7 +41,7 @@ instance Formula.decEq : DecidableEq (Formula α) := by
 
 @[simp] def Formula.size : Formula α → ℕ
 | atom _ | ⊥ => 0
-| p ⋀ q | p ⋁ q | imp p q => p.size + q.size + 1
+| p ⋀ q | p ⋁ q | p ⇒ q => p.size + q.size + 1
 
 abbrev Context (α : Type u) := Finset (Formula α)
 

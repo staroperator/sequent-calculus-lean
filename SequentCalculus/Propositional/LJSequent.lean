@@ -70,7 +70,7 @@ theorem weakenL : Γ ⊢[k] p → Γ ⊆ Δ → Δ ⊢[k] p := by
 theorem weakenL' : Γ ⊢[k] p → Γ,, q ⊢[k] p :=
   (weakenL · subset_add)
 
-theorem consistency : (∅ ⊢[k] (⊥ : Formula α)) → False := by
+theorem consistency : ¬ (∅ ⊢[k] (⊥ : Formula α)) := by
   intro h
   induction' k using Nat.strongRecOn with k ih
   generalize h₁ : (∅ : Context α) = Γ at h
@@ -87,7 +87,7 @@ theorem or_inversion : ∅ ⊢[k] p ⋁ ~ p → ∅ ⊢[k] p ∨ ∅ ⊢[k] ~ p 
   case succ h => subst h₁; apply ih at h <;> aesop
 
 open Formula in
-theorem no_excluded_middle {a : α} : ∅ ⊢[k] atom a ⋁ ~ atom a → False := by
+theorem no_excluded_middle {a : α} : ¬ (∅ ⊢[k] atom a ⋁ ~ atom a) := by
   intro h
   apply or_inversion at h
   rcases h with h | h
@@ -108,7 +108,7 @@ theorem no_excluded_middle {a : α} : ∅ ⊢[k] atom a ⋁ ~ atom a → False :
 set_option maxHeartbeats 400000
 attribute [simp] Nat.add_zero Nat.add_succ Nat.succ_add Nat.lt_succ
 
-theorem cut {Γ : Context α} :
+theorem cut :
   Γ ⊢[k₁] p → Γ,, p ⊢[k₂] q → ∃ k, Γ ⊢[k] q := by
   intro h₁ h₂
   
