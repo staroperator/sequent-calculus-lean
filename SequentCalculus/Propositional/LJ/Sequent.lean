@@ -134,57 +134,51 @@ theorem no_excluded_middle {a : α} : ∅ ⊬ atom a ⋁ ~ atom a := by
     cases h <;> rcases (add_eq_add h₁) with h₂ | ⟨h₂, h₃⟩
       <;> (try injection h₂) <;> simp at h₃
 
-end Sequent
-
 attribute [simp] Nat.add_succ Nat.succ_add Nat.lt_succ
 
-theorem HSequent.cut : Γ ⊢[k₁] p → Γ,, p ⊢[k₂] q → Γ ⊢ q := by
+theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
   intro h₁ h₂
-  induction' h : p.size using Nat.strongRecOn with _ ih₁ generalizing Γ p q k₁ k₂; subst h
-  replace ih₁ : ∀ m < p.size, ∀ {Γ : Context α} {p q}, Γ ⊢ p → Γ,, p ⊢ q → p.size = m → Γ ⊢ q := by
-    intros _ h _ _ _ h₁ h₂ h₃
-    rcases h₁.hSequent with ⟨k₁, h₁⟩
-    rcases h₂.hSequent with ⟨k₂, h₂⟩
-    exact ih₁ _ h h₁ h₂ h₃
-  induction' h : (k₁ + k₂) using Nat.strongRecOn with _ ih₂
-    generalizing Γ q k₁ k₂; subst h
+  induction' h : p.size using Nat.strongRecOn with _ ih₁ generalizing Γ p q; subst h
+  apply hSequent at h₁; rcases h₁ with ⟨k₁, h₁⟩
+  apply hSequent at h₂; rcases h₂ with ⟨k₂, h₂⟩
+  induction' h : (k₁ + k₂) using Nat.strongRecOn with _ ih₂ generalizing Γ q k₁ k₂; subst h
   generalize h : (Γ,, p) = Δ at h₂
   have h₁' := h₁
   cases h₁' with simp at *
-  | succ h₁' => subst h; exact ih₂ _ (by rfl) h₁' h₂ rfl
+  | succ h₁' => subst h; exact ih₂ _ (by rfl) _ h₁' _ h₂ rfl
   | ax => subst h; rw [add_contraction] at h₂; exact h₂.sequent
   | falseL => exact Sequent.falseL
   | andL₁ | orL =>
     subst h; rw [←add_contraction]
-    constructor <;> apply ih₂ _ (by rfl) _ _ rfl
-      <;> rw [add_exchange] <;> apply weakenL' <;> assumption
+    constructor <;> apply ih₂ _ (by rfl) _ _ _ _ rfl
+      <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | andL₂ =>
     subst h; rw [←add_contraction]
-    apply Sequent.andL₂; apply ih₂ _ (by rfl) _ _ rfl
-     <;> rw [add_exchange] <;> apply weakenL' <;> assumption
+    apply Sequent.andL₂; apply ih₂ _ (by rfl) _ _ _ _ rfl
+     <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | impL =>
     subst h; rw [←add_contraction]
     apply Sequent.impL
-    · apply Sequent.weakenL'; apply sequent; assumption
-    · apply ih₂ _ (by rfl) _ _ rfl
-        <;> rw [add_exchange] <;> apply weakenL' <;> assumption
+    · apply Sequent.weakenL'; apply HSequent.sequent; assumption
+    · apply ih₂ _ (by rfl) _ _ _ _ rfl
+        <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | andR h₁' h₁'' | orR₁ h₁' | orR₂ h₁' | impR h₁' =>
     have h₂' := h₂
     cases h₂' with simp at *
-    | succ h₂' => subst h; exact ih₂ _ (by simp) h₁ h₂' rfl
+    | succ h₂' => subst h; exact ih₂ _ (by simp) _ h₁ _ h₂' rfl
     | ax =>
       rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · subst h'; exact h₁.sequent
       · exact Sequent.ax' h''
     | andR | orR₁ =>
       subst h
-      constructor <;> apply ih₂ _ (by simp; rfl) h₁ (by assumption) rfl
+      constructor <;> apply ih₂ _ (by simp; rfl) _ h₁ _ (by assumption) rfl
     | orR₂ h₂' =>
-      subst h; apply Sequent.orR₂; exact ih₂ _ (by simp) h₁ h₂' rfl
+      subst h; apply Sequent.orR₂; exact ih₂ _ (by simp) _ h₁ _ h₂' rfl
     | impR h₂' =>
       subst h
       apply Sequent.impR
-      apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
+      apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
       rw [add_exchange]; exact h₂'
     | falseL =>
       rcases (add_eq_add' h) with h' | ⟨h', h''⟩
@@ -196,36 +190,36 @@ theorem HSequent.cut : Γ ⊢[k₁] p → Γ,, p ⊢[k₂] q → Γ ⊢ q := by
         all_goals
           subst_vars
           apply ih₁ _ (by simp) h₁'.sequent _ rfl
-          apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-          rw [add_exchange, h, add_exchange]; exact (weakenL' h₂')
+          apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+          rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
       · rw [←add_eq_of_mem h'']
         apply Sequent.andL₁
-        apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-        rw [add_exchange, h, add_exchange]; exact weakenL' h₂'
+        apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+        rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
     | andL₂ h₂' =>
       rcases (add_eq_add' h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
           apply ih₁ _ (by simp) h₁''.sequent _ rfl
-          apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-          rw [add_exchange, h, add_exchange]; exact (weakenL' h₂')
+          apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+          rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
       · rw [←add_eq_of_mem h'']
         apply Sequent.andL₂
-        apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-        rw [add_exchange, h, add_exchange]; exact weakenL' h₂'
+        apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+        rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
     | orL h₂ h₂' =>
       rcases (add_eq_add' h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
           apply ih₁ _ (by simp) h₁'.sequent _ rfl
-          apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-          rw [add_exchange, h, add_exchange]; apply weakenL'; assumption
+          apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+          rw [add_exchange, h, add_exchange]; apply HSequent.weakenL'; assumption
       · rw [←add_eq_of_mem h'']
         apply Sequent.orL
-          <;> apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-          <;> rw [add_exchange, h, add_exchange] <;> apply weakenL'
+          <;> apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+          <;> rw [add_exchange, h, add_exchange] <;> apply HSequent.weakenL'
           <;> assumption
     | impL h₂' h₂'' =>
       rcases (add_eq_add' h) with h' | ⟨h', h''⟩
@@ -234,24 +228,16 @@ theorem HSequent.cut : Γ ⊢[k₁] p → Γ,, p ⊢[k₂] q → Γ ⊢ q := by
           subst_vars
           apply ih₁ _ (Nat.le_add_left _ _) _ _ rfl
           · apply ih₁ _ (by simp) _ h₁'.sequent rfl
-            apply ih₂ _ (by simp; rfl) h₁ _ rfl
-            rw [h]; exact weakenL' h₂'
-          · apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-            rw [add_exchange, h, add_exchange]; exact weakenL' h₂''
+            apply ih₂ _ (by simp; rfl) _ h₁ _ _ rfl
+            rw [h]; exact HSequent.weakenL' h₂'
+          · apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+            rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂''
       · rw [←add_eq_of_mem h'']
         apply Sequent.impL
-        · apply ih₂ _ (by simp; rfl) h₁ _ rfl
-          rw [h]; exact weakenL' h₂'
-        · apply ih₂ _ (by simp; rfl) (weakenL' h₁) _ rfl
-          rw [add_exchange, h, add_exchange]; exact weakenL' h₂''
-
-namespace Sequent
-
-theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
-  intro h₁ h₂
-  rcases h₁.hSequent with ⟨k₁, h₁⟩
-  rcases h₂.hSequent with ⟨k₂, h₂⟩
-  exact HSequent.cut h₁ h₂
+        · apply ih₂ _ (by simp; rfl) _ h₁ _ _ rfl
+          rw [h]; exact HSequent.weakenL' h₂'
+        · apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
+          rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂''
 
 theorem andL' : Γ,, p,, q ⊢ r → Γ,, p ⋀ q ⊢ r := by
   intro h
@@ -268,9 +254,13 @@ theorem andL'_inv : Γ,, p ⋀ q ⊢ r → Γ,, p,, q ⊢ r := by
   · rw [add_exchange]; apply weakenL'
     rw [add_exchange]; exact weakenL' h
 
+theorem andL'_iff : Γ,, p ⋀ q ⊢ r ↔ Γ,, p,, q ⊢ r := ⟨andL'_inv, andL'⟩
+
 theorem andR_inv : Γ ⊢ p ⋀ q → Γ ⊢ p ∧ Γ ⊢ q := by
   intro h
   constructor <;> apply cut h <;> aesop
+
+theorem andR_iff : Γ ⊢ p ⋀ q ↔ Γ ⊢ p ∧ Γ ⊢ q := ⟨andR_inv, and_imp.mpr andR⟩
 
 theorem orL_inv : Γ,, p ⋁ q ⊢ r → Γ,, p ⊢ r ∧ Γ,, q ⊢ r := by
   intro h
@@ -278,9 +268,13 @@ theorem orL_inv : Γ,, p ⋁ q ⊢ r → Γ,, p ⊢ r ∧ Γ,, q ⊢ r := by
   · apply cut (orR₁ ax); rw [add_exchange]; exact weakenL' h
   · apply cut (orR₂ ax); rw [add_exchange]; exact weakenL' h
 
+theorem orL_iff : Γ,, p ⋁ q ⊢ r ↔ Γ,, p ⊢ r ∧ Γ,, q ⊢ r := ⟨orL_inv, and_imp.mpr orL⟩
+
 theorem impR_inv : Γ ⊢ p ⇒ q → Γ,, p ⊢ q := by
   intro h
   apply cut (weakenL' h)
   exact impL ax ax
+
+theorem impR_iff : Γ ⊢ p ⇒ q ↔ Γ,, p ⊢ q := ⟨impR_inv, impR⟩
 
 end Sequent
