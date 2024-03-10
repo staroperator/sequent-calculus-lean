@@ -1,3 +1,3 @@
 import SequentCalculus.Finset
 import SequentCalculus.Propositional.Syntax
-import SequentCalculus.Propositional.LJSequent
+import SequentCalculus.Propositional.LJ.Sequent
