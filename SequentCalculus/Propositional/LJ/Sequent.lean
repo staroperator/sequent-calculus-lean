@@ -2,6 +2,8 @@ import SequentCalculus.Propositional.Syntax
 
 namespace Propositional.LJ
 
+open Formula
+
 variable {α : Type u} [DecidableEq α]
 
 @[aesop unsafe]
@@ -111,20 +113,43 @@ theorem negR : Γ,, p ⊢ ⊥ → Γ ⊢ ~ p := impR
 
 theorem trueR : Γ ⊢ ⊤ := negR falseL
 
+theorem double_neg : Γ,, p ⊢ ~ ~ p := impR (negL ax)
+
+theorem negOrL₁ : Γ,, ~ (p ⋁ q) ⊢ ~ p := by
+  apply impR
+  rw [add_exchange]
+  apply negL
+  exact orR₁ ax
+
+theorem negOrL₂ : Γ,, ~ (p ⋁ q) ⊢ ~ q := by
+  apply impR
+  rw [add_exchange]
+  apply negL
+  exact orR₂ ax
+
+theorem excluded_middle_irrefutable : Γ ⊢ ~ (p ⋀ ~ p) := by
+  apply impR
+  rw [←add_contraction]
+  apply andL₁
+  rw [add_exchange]
+  apply andL₂
+  apply impL <;> exact ax
+
 theorem consistency : ∅ ⊬ (⊥ : Formula α) := by
   intro h
   generalize h₁ : (∅ : Context α) = Γ at h
   cases h <;> exact add_ne_empty (Eq.symm h₁)
 
-theorem or_inversion : ∅ ⊢ p ⋁ ~ p → ∅ ⊢ p ∨ ∅ ⊢ ~ p := by
+theorem or_inv : ∅ ⊢ p ⋁ ~ p → ∅ ⊢ p ∨ ∅ ⊢ ~ p := by
   intro h
   generalize h₁ : (∅ : Context α) = Γ at h
   cases h <;> (try cases add_ne_empty (Eq.symm h₁)) <;> aesop
 
-open Formula in
-theorem no_excluded_middle {a : α} : ∅ ⊬ atom a ⋁ ~ atom a := by
-  intro h
-  apply or_inversion at h
+theorem no_excluded_middle :
+  Nonempty α → ¬ (∀ (Γ : Context α) p, Γ ⊢ p ⋁ ~ p) := by
+  intro ⟨a⟩ h
+  replace h := h ∅ (atom a)
+  apply or_inv at h
   rcases h with h | h
     <;> generalize h₁ : (∅ : Context α) = Γ at h
     <;> cases h <;> (try cases add_ne_empty (Eq.symm h₁))
@@ -276,5 +301,16 @@ theorem impR_inv : Γ ⊢ p ⇒ q → Γ,, p ⊢ q := by
   exact impL ax ax
 
 theorem impR_iff : Γ ⊢ p ⇒ q ↔ Γ,, p ⊢ q := ⟨impR_inv, impR⟩
+
+theorem no_double_neg_inv :
+  Nonempty α → ¬ (∀ (Γ : Context α) p, Γ,, ~ ~ p ⊢ p) := by
+  intro h₁ h
+  apply no_excluded_middle h₁
+  intros Γ p
+  apply cut _ (h Γ _)
+  apply impR
+  apply cut negOrL₂
+  apply impL _ ax
+  exact negOrL₁
 
 end Sequent
