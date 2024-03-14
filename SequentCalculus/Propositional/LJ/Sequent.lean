@@ -289,9 +289,7 @@ theorem andR_iff : Γ ⊢ p ⋀ q ↔ Γ ⊢ p ∧ Γ ⊢ q := ⟨andR_inv, and_
 
 theorem orL_inv : Γ,, p ⋁ q ⊢ r → Γ,, p ⊢ r ∧ Γ,, q ⊢ r := by
   intro h
-  constructor
-  · apply cut (orR₁ ax); rw [add_exchange]; exact weakenL' h
-  · apply cut (orR₂ ax); rw [add_exchange]; exact weakenL' h
+  constructor <;> apply cut _ (by rw [add_exchange]; exact weakenL' h) <;> aesop
 
 theorem orL_iff : Γ,, p ⋁ q ⊢ r ↔ Γ,, p ⊢ r ∧ Γ,, q ⊢ r := ⟨orL_inv, and_imp.mpr orL⟩
 
