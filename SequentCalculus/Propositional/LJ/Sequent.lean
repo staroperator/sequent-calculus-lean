@@ -312,3 +312,5 @@ theorem no_double_neg_inv :
   exact negOrL₁
 
 end Sequent
+
+end Propositional.LJ

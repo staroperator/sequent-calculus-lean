@@ -399,3 +399,7 @@ theorem impR_inv : Γ ⊢ Δ,, p ⇒ q → Γ,, p ⊢ Δ,, q := by
   · exact impL ax ax
 
 theorem impR_iff : Γ ⊢ Δ,, p ⇒ q ↔ Γ,, p ⊢ Δ,, q := ⟨impR_inv, impR⟩
+
+end Sequent
+
+end Propositional.LK
