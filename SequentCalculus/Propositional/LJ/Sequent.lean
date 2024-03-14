@@ -172,19 +172,19 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
   cases h₁' with simp at *
   | succ h₁' => subst h; exact ih₂ _ (by rfl) _ h₁' _ h₂ rfl
   | ax => subst h; rw [add_contraction] at h₂; exact h₂.sequent
-  | falseL => exact Sequent.falseL
+  | falseL => exact falseL
   | andL₁ | orL =>
     subst h; rw [←add_contraction]
     constructor <;> apply ih₂ _ (by rfl) _ _ _ _ rfl
       <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | andL₂ =>
     subst h; rw [←add_contraction]
-    apply Sequent.andL₂; apply ih₂ _ (by rfl) _ _ _ _ rfl
+    apply andL₂; apply ih₂ _ (by rfl) _ _ _ _ rfl
      <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | impL =>
     subst h; rw [←add_contraction]
-    apply Sequent.impL
-    · apply Sequent.weakenL'; apply HSequent.sequent; assumption
+    apply impL
+    · apply weakenL'; apply HSequent.sequent; assumption
     · apply ih₂ _ (by rfl) _ _ _ _ rfl
         <;> rw [add_exchange] <;> apply HSequent.weakenL' <;> assumption
   | andR h₁' h₁'' | orR₁ h₁' | orR₂ h₁' | impR h₁' =>
@@ -194,23 +194,23 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
     | ax =>
       rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · subst h'; exact h₁.sequent
-      · exact Sequent.ax' h''
+      · exact ax' h''
     | andR | orR₁ =>
       subst h
       constructor <;> apply ih₂ _ (by simp; rfl) _ h₁ _ (by assumption) rfl
     | orR₂ h₂' =>
-      subst h; apply Sequent.orR₂; exact ih₂ _ (by simp) _ h₁ _ h₂' rfl
+      subst h; apply orR₂; exact ih₂ _ (by simp) _ h₁ _ h₂' rfl
     | impR h₂' =>
       subst h
-      apply Sequent.impR
+      apply impR
       apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
       rw [add_exchange]; exact h₂'
     | falseL =>
-      rcases (add_eq_add' h) with h' | ⟨h', h''⟩
+      rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · injection h'
-      · rw [←add_eq_of_mem h'']; exact Sequent.falseL
+      · rw [←add_eq_of_mem h'']; exact falseL
     | andL₁ h₂' =>
-      rcases (add_eq_add' h) with h' | ⟨h', h''⟩
+      rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
@@ -218,11 +218,11 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
           apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
           rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
       · rw [←add_eq_of_mem h'']
-        apply Sequent.andL₁
+        apply andL₁
         apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
         rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
     | andL₂ h₂' =>
-      rcases (add_eq_add' h) with h' | ⟨h', h''⟩
+      rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
@@ -230,11 +230,11 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
           apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
           rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
       · rw [←add_eq_of_mem h'']
-        apply Sequent.andL₂
+        apply andL₂
         apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
         rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂'
-    | orL h₂ h₂' =>
-      rcases (add_eq_add' h) with h' | ⟨h', h''⟩
+    | orL h₂' h₂'' =>
+      rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
@@ -242,12 +242,12 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
           apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
           rw [add_exchange, h, add_exchange]; apply HSequent.weakenL'; assumption
       · rw [←add_eq_of_mem h'']
-        apply Sequent.orL
+        apply orL
           <;> apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
           <;> rw [add_exchange, h, add_exchange] <;> apply HSequent.weakenL'
           <;> assumption
     | impL h₂' h₂'' =>
-      rcases (add_eq_add' h) with h' | ⟨h', h''⟩
+      rcases (add_eq_add h) with h' | ⟨h', h''⟩
       · injection h'
         all_goals
           subst_vars
@@ -258,7 +258,7 @@ theorem cut : Γ ⊢ p → Γ,, p ⊢ q → Γ ⊢ q := by
           · apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
             rw [add_exchange, h, add_exchange]; exact HSequent.weakenL' h₂''
       · rw [←add_eq_of_mem h'']
-        apply Sequent.impL
+        apply impL
         · apply ih₂ _ (by simp; rfl) _ h₁ _ _ rfl
           rw [h]; exact HSequent.weakenL' h₂'
         · apply ih₂ _ (by simp; rfl) _ (HSequent.weakenL' h₁) _ _ rfl
